@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guess the Movie</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="instructions">
+        Welcome to the movie guessing game! Enter a movie name, select two
+        actors then send the link to your friend!
+      </div>
+
+      <!-- Form to allow the user to enter their own movie -->
+      <form id="movieForm">
+        <input type="text" id="movieInput" placeholder="Enter a movie name" />
+        <button type="submit">Submit</button>
+      </form>
+
+      <p id="result"></p>
+    </div>
+    <button id="shareButton">Send Link to Friend</button>
+
+    <div id="actors"></div>
+    <ul id="movieList"></ul>
+
+    <script src="script.js"></script>
+  </body>
+</html>
