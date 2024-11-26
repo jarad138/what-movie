@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Guess the Movie</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+      }
+
+      #actorsContainer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px; /* Space between the images */
+        flex-wrap: wrap; /* Wrap the images if the screen is too narrow */
+      }
+
+      .actor {
+        text-align: center;
+      }
+
+      .actor img {
+        border-radius: 10px;
+        max-width: 200px;
+        max-height: 300px;
+        object-fit: cover;
+      }
+      .guess-container {
+        margin-top: 20px;
+      }
+      .guess-container input {
+        padding: 10px;
+        margin-right: 10px;
+        font-size: 16px;
+      }
+      .guess-container button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .guess-container button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>What Movie!</h1>
+    <div id="actorsContainer"></div>
+    <div id="actorsContainer"></div>
+    <div class="guess-container">
+      <input type="text" id="guessInput" placeholder="Enter your guess" />
+      <button id="submitGuess">Submit Guess</button>
+    </div>
+    <div id="feedback" style="margin-top: 20px; font-size: 18px"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
