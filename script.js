@@ -1,11 +1,59 @@
-const token = "put your token here!!";
+const token = "xxxx";
 
+// Url things
 const bearerToken = `Bearer ${token}`;
 const notFoundImage =
   "https://user-images.githubusercontent.com/24848110/33519396-7e56363c-d79d-11e7-969b-09782f5ccbab.png";
+const baseUrl = "https://api.themoviedb.org/3";
+const imageBaseUrl = "https://image.tmdb.org/t/p/w200";
 
+// Elements
 let selectedActors = []; // Track the two selected actors
 const shareButton = document.getElementById("shareButton");
+const actorsContainer = document.getElementById("actorsContainer");
+const feedback = document.getElementById("feedback");
+const guessInput = document.getElementById("guessInput");
+const submitGuess = document.getElementById("submitGuess");
+
+// Fetch actor details by ID
+async function fetchActorDetails(actorId) {
+  const url = `${baseUrl}/person/${actorId}`;
+
+  const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: bearerToken,
+    },
+  });
+
+  return await response.json();
+}
+
+// Render actors
+async function renderActors(actorId1, actorId2) {
+  const actor1Details = await fetchActorDetails(actorId1);
+  const actor2Details = await fetchActorDetails(actorId2);
+
+  // Render actor 1
+  if (actor1Details) {
+    actorsContainer.innerHTML += `
+      <div class="actor">
+        <img src="${imageBaseUrl}${actor1Details.profile_path}" alt="${actor1Details.name}" />
+        <p>${actor1Details.name}</p>
+      </div>
+    `;
+  }
+
+  // Render actor 2
+  if (actor2Details) {
+    actorsContainer.innerHTML += `
+      <div class="actor">
+        <img src="${imageBaseUrl}${actor2Details.profile_path}" alt="${actor2Details.name}" />
+        <p>${actor2Details.name}</p>
+      </div>
+    `;
+  }
+}
 
 async function searchMovieByTitle(title) {
   const encodedTitle = encodeURIComponent(title);
@@ -90,7 +138,7 @@ function selectActor(actor, actorItem) {
   // Check if actor is already selected
   const actorIndex = selectedActors.findIndex((a) => a.id === actor.id);
 
-  console.log("actorIndex", actorIndex, "name", actor.name);
+  console.log("actorIndex", actorIndex, "name", actor.name, "id", actor.id);
 
   if (actorIndex > -1) {
     selectedActors.splice(actorIndex, 1); // Deselect if clicked again
@@ -108,56 +156,120 @@ function selectActor(actor, actorItem) {
   shareButton.style.display = selectedActors.length === 2 ? "block" : "none";
 }
 
-shareButton.addEventListener("click", () => {
-  console.log("click share button:", selectedActors.length);
+// Trigger renderActors only on guess.html
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("dom loaded", window.location.pathname);
+  if (window.location.pathname.endsWith("guess.html")) {
+    console.log("dom loaded rendering actors");
 
-  if (selectedActors.length === 2) {
-    const actor1 = encodeURIComponent(selectedActors[0].name);
-    const actor2 = encodeURIComponent(selectedActors[1].name);
+    const urlParams = new URLSearchParams(window.location.search);
+    const actor1Id = urlParams.get("actor1");
+    const actor2Id = urlParams.get("actor2");
 
-    // Generate a shareable link
-    const shareLink = `${window.location.origin}?actor1=${actor1}&actor2=${actor2}`;
-    alert(`Share this link with your friend:\n\n${shareLink}`);
-  } else {
-    alert("Please select two actors.");
+    renderActors(actor1Id, actor2Id);
+
+    // Event listener for the guess button
+    submitGuess.addEventListener("click", async () => {
+      const guess = guessInput.value.trim();
+
+      if (!guess) {
+        feedback.textContent = "Please enter a guess.";
+        feedback.style.color = "red";
+        return;
+      }
+
+      // Hardcoded answer for now!! Need to do this better to pass
+      // the movie from the other page somehow!
+      let answer = "terminator";
+
+      if (guess === answer) {
+        feedback.textContent = `Correct! The movie is "${answer}".`;
+        feedback.style.color = "green";
+      } else {
+        feedback.textContent = "Incorrect guess. Try again!";
+        feedback.style.color = "red";
+      }
+    });
+
+    return;
   }
-});
 
-document
-  .getElementById("movieForm")
-  .addEventListener("submit", async function (event) {
-    event.preventDefault(); // Prevent default form submission
-    const title = document.getElementById("movieInput").value;
-    const movieList = document.getElementById("movieList");
+  shareButton.addEventListener("click", async () => {
+    if (selectedActors.length === 2) {
+      const actor1Id = selectedActors[0].id; // Use actor ID
+      const actor2Id = selectedActors[1].id; // Use actor ID
 
-    movieList.innerHTML = "";
+      // Generate a shareable link with actor IDs
+      const shareLink = `${window.location.href.replace(
+        /\/index\.html$/,
+        "",
+      )}/guess.html?actor1=${actor1Id}&actor2=${actor2Id}`;
 
-    if (title.trim() === "") {
-      alert("Please enter a movie name.");
-      return;
+      console.log("link:", shareLink);
+
+      try {
+        // Copy the link to the clipboard
+        await navigator.clipboard.writeText(shareLink);
+
+        // Show the notification next to the button
+        const notification = document.getElementById("notification");
+        const buttonRect = shareButton.getBoundingClientRect();
+
+        // Position the notification near the button
+        notification.style.top = `${buttonRect.top + window.scrollY - 10}px`;
+        notification.style.left = `${buttonRect.left + window.scrollX + shareButton.offsetWidth + 10
+          }px`;
+        notification.style.display = "block";
+
+        // Automatically hide the notification after 3 seconds
+        setTimeout(() => {
+          notification.style.display = "none";
+        }, 2000);
+      } catch (error) {
+        console.error("Failed to copy the link:", error);
+        alert("Failed to copy the link. Please try again.");
+      }
+    } else {
+      alert("Please select two actors.");
     }
+  });
 
-    try {
-      const movies = await searchMovieByTitle(title);
-      if (movies && movies.length > 0) {
-        movies.forEach((movie) => {
-          const listItem = document.createElement("li");
+  document
+    .getElementById("movieForm")
+    .addEventListener("submit", async function(event) {
+      event.preventDefault(); // Prevent default form submission
+      const title = document.getElementById("movieInput").value;
+      const movieList = document.getElementById("movieList");
 
-          listItem.innerHTML = `
+      movieList.innerHTML = "";
+
+      if (title.trim() === "") {
+        alert("Please enter a movie name.");
+        return;
+      }
+
+      try {
+        const movies = await searchMovieByTitle(title);
+        if (movies && movies.length > 0) {
+          movies.forEach((movie) => {
+            const listItem = document.createElement("li");
+
+            listItem.innerHTML = `
           <strong>${movie.title}</strong>
           <span>Release Date: ${movie.release_date || "N/A"}</span>
         `;
 
-          listItem.addEventListener("click", () =>
-            fetchActors(movie.id, listItem),
-          ); // Attach click event to fetch actors
+            listItem.addEventListener("click", () =>
+              fetchActors(movie.id, listItem),
+            );
 
-          movieList.appendChild(listItem);
-        });
-      } else {
-        movieList.innerHTML = "<li>No movies found.</li>";
+            movieList.appendChild(listItem);
+          });
+        } else {
+          movieList.innerHTML = "<li>No movies found.</li>";
+        }
+      } catch (error) {
+        alert("failed to search movie: " + error);
       }
-    } catch (error) {
-      alert("failed to search movie: " + error);
-    }
-  });
+    });
+});
